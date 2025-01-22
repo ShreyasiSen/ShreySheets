@@ -156,7 +156,7 @@ const Spreadsheet = () => {
             }
             setCalculatedResult(count > 0 ? sum / count : 0);
         } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
-            (formula.substring(3, 4) === 'COL' || formula.substring(3, 4) === 'col')) {
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
             // Handle AVGC
             let col = parseInt(formula.substring(7, formula.length - 1));
             let sum = 0;
