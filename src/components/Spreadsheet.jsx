@@ -112,27 +112,141 @@ const Spreadsheet = () => {
 
     const formulaTyped = (e) => {
         e.preventDefault();
-        if(formula.substring(3, 4)==='R' || formula.substring(3, 4)==='r'){
+
+        if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle SUMROW
             let row = parseInt(formula.substring(7, formula.length - 1));
             let sum = 0;
+            let count = 0;
             for (let i = 0; i < numCols; i++) {
                 let dat = parseFloat(data[row][i]);
                 if (!isNaN(dat)) {
                     sum += dat;
+                    count++;
                 }
             }
             setCalculatedResult(sum);
-        }
-        else if(formula.substring(3, 4)==='C' || formula.substring(3, 4)==='c'){
-            let col= parseInt(formula.substring(7, formula.length - 1));
-            let sum1=0;
+        } else if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle SUMCOL
+            let col = parseInt(formula.substring(7, formula.length - 1));
+            let sum1 = 0;
+            let count = 0;
             for (let i = 0; i < numRows; i++) {
                 let datt = parseFloat(data[i][col]);
                 if (!isNaN(datt)) {
                     sum1 += datt;
+                    count++;
                 }
             }
             setCalculatedResult(sum1);
+        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle AVGR
+            let row = parseInt(formula.substring(7, formula.length - 1));
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i]);
+                if (!isNaN(dat)) {
+                    sum += dat;
+                    count++;
+                }
+            }
+            setCalculatedResult(count > 0 ? sum / count : 0);
+        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
+            (formula.substring(3, 4) === 'COL' || formula.substring(3, 4) === 'col')) {
+            // Handle AVGC
+            let col = parseInt(formula.substring(7, formula.length - 1));
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col]);
+                if (!isNaN(dat)) {
+                    sum += dat;
+                    count++;
+                }
+            }
+            setCalculatedResult(count > 0 ? sum / count : 0);
+        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle MAXR
+            let row = parseInt(formula.substring(7, formula.length - 1));
+            let max = -Infinity;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i]);
+                if (!isNaN(dat) && dat > max) {
+                    max = dat;
+                }
+            }
+            setCalculatedResult(max === -Infinity ? "No valid data" : max);
+        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle MAXC
+            let col = parseInt(formula.substring(7, formula.length - 1));
+            let max = -Infinity;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col]);
+                if (!isNaN(dat) && dat > max) {
+                    max = dat;
+                }
+            }
+            setCalculatedResult(max === -Infinity ? "No valid data" : max);
+        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle MINR
+            let row = parseInt(formula.substring(7, formula.length - 1));
+            let min = Infinity;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i]);
+                if (!isNaN(dat) && dat < min) {
+                    min = dat;
+                }
+            }
+            setCalculatedResult(min === Infinity ? "No valid data" : min);
+        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle MINC
+            let col = parseInt(formula.substring(7, formula.length - 1));
+            let min = Infinity;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col]);
+                if (!isNaN(dat) && dat < min) {
+                    min = dat;
+                }
+            }
+            setCalculatedResult(min === Infinity ? "No valid data" : min);
+        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
+            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
+            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
+            (formula.substring(5, 8) === 'ROW' || formula.substring(5, 8) === 'row')) {
+            // Handle COUNTR
+            let row = parseInt(formula.substring(9, formula.length - 1));
+            let count = 0;
+            for (let i = 0; i < numCols; i++) {
+                let dat = data[row][i];
+                if (dat !== '') { 
+                    count++;
+                }
+            }
+            setCalculatedResult(count);
+        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
+            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
+            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
+            (formula.substring(5, 8) === 'COL' || formula.substring(5, 8) === 'col')) {
+            // Handle COUNTC
+            let col = parseInt(formula.substring(9, formula.length - 1));
+            let count = 0;
+            for (let i = 0; i < numRows; i++) {
+                let dat = data[i][col];
+                if (dat !== '') { 
+                    count++;
+                }
+            }
+            setCalculatedResult(count);
+        } else {
+            setCalculatedResult('Invalid formula');
         }
     };
 
