@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ToolbarContext } from '../contexts/ToolbarContext';
 import { useContext } from 'react';
 import '../index.css';
+import axios from 'axios';
 
 const numRows = 10;
 const numCols = 10;
@@ -22,6 +23,8 @@ const Spreadsheet = () => {
     const [toggleColorValue, setFontColorValue] = useState(false);
     const [formula, setFormula] = useState('');
     const [calculatedResult, setCalculatedResult] = useState(0);
+    const [save, toggleSave] = useState(false);
+    const [sheetTitle, setSheetTitle] = useState('');
 
     const handleInputChange = (row, col, e) => {
         e.preventDefault();
@@ -104,10 +107,28 @@ const Spreadsheet = () => {
         }
     }
 
+    const saveClick = () => {
+        toggleSave(!save);
+    }
+
+    const cancelSave = () => {
+        toggleSave(false);
+    }
+
+    const settingTitle = (e) => {
+        setSheetTitle(e.target.value);
+    }
+
+    const saveSheet = () => {
+        const sheet = {
+            sheetTitle: sheetTitle,
+            data: data,
+        };
+    }
+
     const formulaTyping = (e) => {
         e.preventDefault();
         setFormula(e.target.value);
-
     }
 
     const formulaTyped = (e) => {
@@ -226,7 +247,7 @@ const Spreadsheet = () => {
             let count = 0;
             for (let i = 0; i < numCols; i++) {
                 let dat = data[row][i];
-                if (dat !== '') { 
+                if (dat !== '') {
                     count++;
                 }
             }
@@ -240,7 +261,7 @@ const Spreadsheet = () => {
             let count = 0;
             for (let i = 0; i < numRows; i++) {
                 let dat = data[i][col];
-                if (dat !== '') { 
+                if (dat !== '') {
                     count++;
                 }
             }
@@ -324,23 +345,64 @@ const Spreadsheet = () => {
         <div className="spreadsheet-container p-4">
             <h1 className="text-4xl font-bold text-left text-blue-600 mb-6">Shrey Sheets</h1>
             {/*add a formula bar here*/}
-            <div className="formula-bar flex items-center justify-between p-2 mb-5 bg-gray-100 rounded">
-                <input type="text" className="flex-grow mr-2" placeholder="Enter formula..." onChange={formulaTyping} />
-                <button className="formula-button font-semibold text-l mr-10 w-20 bg-gray-300 p-2 rounded " onClick={formulaTyped}>Apply</button>
+            <div className='flex '>
+                <div className="formula-bar flex items-center justify-between p-2 mb-5 w-1/2 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                    <input
+                        type="text"
+                        className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
+                        placeholder="Enter formula..."
+                        onChange={formulaTyping}
+                    />
+                    <button
+                        className="formula-button font-bold text-l mr-2 w-20 bg-white text-black rounded-lg px-4 py-2 hover:bg-gray-100"
+                        onClick={formulaTyped}
+                    >
+                        Apply
+                    </button>
+                </div>
+
+                <div className="result-bar font-semibold flex ml-96 items-center p-5 mb-5 w-56 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                    <span>RESULT : {calculatedResult}</span>
+                </div>
             </div>
 
-            <div className="result-bar flex items-center p-2 mb-5 bg-gray-200 rounded">
-                <span>Result: {calculatedResult}</span>
-            </div>
             {/* Toolbar */}
             <div className="toolbar flex space-x-2 mb-4">
-                <button className="toolbar-button-bld  bg-gray-200 p-2 rounded" onClick={toggleBold}>Bold</button>
-                <button className="toolbar-button-idi bg-gray-200 p-2 rounded" onClick={toggleItalic}>Italic</button>
-                <button className="toolbar-minus bg-gray-200 p-2 rounded" onClick={minusSize}>-</button>
-                <div className="toolbar-button bg-gray-200 p-2 rounded flex items-center justify-center" onChange={changeSize}>{fontSize}</div>
-                <button className="toolbar-plus bg-gray-200 p-2 rounded" onClick={plusSize}>+</button>
-                {/* <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleSize}>Font Size</button> */}
-                <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleColor}>Color</button>
+                <div className="toolbar flex space-x-2 mb-4">
+                    <button
+                        className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                        onClick={toggleBold}
+                    >
+                        <b>B</b>
+                    </button>
+                    <button
+                        className="toolbar-button-idi bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                        onClick={toggleItalic}
+                    >
+                        <i>I</i>
+                    </button>
+                    <button
+                        className="toolbar-minus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                        onClick={minusSize}
+                    >
+                        -
+                    </button>
+                    <div className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1 flex items-center justify-center">
+                        {fontSize}
+                    </div>
+                    <button
+                        className="toolbar-plus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                        onClick={plusSize}
+                    >
+                        +
+                    </button>
+                    <button
+                        className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                        onClick={toggleColor}
+                    >
+                        Color
+                    </button>
+                </div>
                 {toggleColorValue && (
                     <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
                         <div className="flex flex-wrap ">
@@ -392,6 +454,30 @@ const Spreadsheet = () => {
                                 className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
                                 onClick={changeFontColor}
                             ></button>
+                        </div>
+                    </div>
+                )}
+                <button className='toolbar-button bg-red-600 hover:bg-red-500 text-white font-semibold 
+                rounded-lg px-4 py-2 absolute right-10' onClick={saveClick}>
+                    Save As
+                </button>
+                {save && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+                            <h2 className="text-xl font-semibold mb-4">Save As</h2>
+                            <input
+                                type="text"
+                                className="w-full p-2 border-2 border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500"
+                                placeholder="Enter file name" onChange={settingTitle}
+                            />
+                            <div className="flex justify-end space-x-4">
+                                <button className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg px-4 py-2" onClick={cancelSave}>
+                                    Cancel
+                                </button>
+                                <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-4 py-2" onClick={saveSheet}>
+                                    Save
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
