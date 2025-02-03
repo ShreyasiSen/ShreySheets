@@ -16,8 +16,10 @@ const Login = () => {
       const response = await axios.post('/api/login', {
         email,
         password,
-      }, { headers: { 'Content-Type': 'application/json' } });
-      
+      },{
+        withCredentials: true
+      });
+      localStorage.setItem('userInfo', JSON.stringify(response.data));
       console.log(response.data);
       navigate('/');
     } catch (error) {

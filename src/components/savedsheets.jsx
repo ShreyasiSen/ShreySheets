@@ -4,11 +4,13 @@ import { useContext } from 'react';
 import '../index.css';
 import axios, { Axios } from 'axios';
 import { Await } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 const numRows = 10;
 const numCols = 10;
 
 const Spreadsheet = () => {
+    const { spreadsheetId } = useParams();
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const id = userInfo._id;
 
@@ -18,7 +20,7 @@ const Spreadsheet = () => {
             Array.from({ length: numCols }, () => '')
         )
     );
-
+    
     const [selectedCells, setSelectedCells] = useState([]);
     const [dragging, setDragging] = useState(false);
     const startCell = useRef(null);
@@ -27,8 +29,23 @@ const Spreadsheet = () => {
     const [toggleColorValue, setFontColorValue] = useState(false);
     const [formula, setFormula] = useState('');
     const [calculatedResult, setCalculatedResult] = useState(0);
-    const [save, toggleSave] = useState(false);
+
     const [sheetTitle, setSheetTitle] = useState('');
+
+    useEffect(() => {
+        const fetchSheet = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8000/api/spreadsheet/${spreadsheetId}`);
+                console.log(response.data.data);
+                setData(response.data.data);
+                setSheetTitle(response.data.sheetTitle);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        fetchSheet();
+    }, [spreadsheetId]);
+
 
     const handleInputChange = (row, col, e) => {
         e.preventDefault();
@@ -85,19 +102,19 @@ const Spreadsheet = () => {
         return selectedCells.some((cell) => cell.row === row && cell.col === col);
     };
 
-    const toggleSize = () => {
-        console.log('size', fontSize);
-    }
+    // const toggleSize = () => {
+    //     console.log('size', fontSize);
+    // }
 
     const toggleColor = () => {
         setFontColorValue(!toggleColorValue);
         console.log('color', fontColor);
     }
 
-    const changeSize = (e) => {
+    // const changeSize = (e) => {
 
-        console.log('size', fontSize);
-    }
+    //     console.log('size', fontSize);
+    // }
 
     const plusSize = () => {
         setFontSize(fontSize + 1);
@@ -111,24 +128,16 @@ const Spreadsheet = () => {
         }
     }
 
-    const saveClick = () => {
-        toggleSave(!save);
-    }
-
-    const cancelSave = () => {
-        toggleSave(false);
-    }
-
-    const settingTitle = (e) => {
-        setSheetTitle(e.target.value);
-    }
-
-    const saveSheet = () => {
-        try {
-            axios.post(`http://localhost:8000/api/spreadsheet/${id}`, {userid:id, sheetTitle: sheetTitle, data: data });
-            toggleSave(false);
-        } catch (error) {
-            console.log('Error saving sheet');
+    const saveUpdate = () => {
+        try{
+            axios.put(`http://localhost:8000/api/spreadsheet/${spreadsheetId}`, {
+                data: data,
+                sheetTitle: sheetTitle
+            });
+            alert('Sheet updated successfully!');
+        }
+        catch{
+            alert('Sheet update failed');
         }
     }
 
@@ -345,170 +354,154 @@ const Spreadsheet = () => {
     });
 
     return (
-        <div className="spreadsheet-container p-4">
-            <h1 className="text-4xl font-bold text-left text-blue-600 mb-6">{userInfo.username}&apos;s sheet</h1>
-            {/*add a formula bar here*/}
-            <div className='flex '>
-                <div className="formula-bar flex items-center justify-between p-2 mb-5 w-1/2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
-                    <input
-                        type="text"
-                        className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
-                        placeholder="Enter formula..."
-                        onChange={formulaTyping}
-                    />
-                    <button
-                        className="formula-button font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100"
-                        onClick={formulaTyped}
-                    >
-                        Apply
-                    </button>
+        <div>
+            <div className="spreadsheet-container p-4">
+                <h1 className="text-4xl font-bold text-left text-purple-700 mb-6">{sheetTitle}</h1>
+                {/*add a formula bar here*/}
+                <div className='flex '>
+                    <div className="formula-bar flex items-center justify-between p-2 mb-5 w-1/2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                        <input
+                            type="text"
+                            className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
+                            placeholder="Enter formula..."
+                            onChange={formulaTyping}
+                        />
+                        <button
+                            className="formula-button font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100"
+                            onClick={formulaTyped}
+                        >
+                            Apply
+                        </button>
+                    </div>
+
+                    <div className="result-bar font-semibold flex ml-96 items-center p-5 mb-5 w-56 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                        <span>RESULT : {calculatedResult}</span>
+                    </div>
                 </div>
 
-                <div className="result-bar font-semibold flex ml-96 items-center p-5 mb-5 w-56 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
-                    <span>RESULT : {calculatedResult}</span>
-                </div>
-            </div>
-
-            {/* Toolbar */}
-            <div className="toolbar flex space-x-2 mb-4">
+                {/* Toolbar */}
                 <div className="toolbar flex space-x-2 mb-4">
-                    <button
-                        className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={toggleBold}
-                    >
-                        <b>B</b>
-                    </button>
-                    <button
-                        className="toolbar-button-idi bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={toggleItalic}
-                    >
-                        <i>I</i>
-                    </button>
-                    <button
-                        className="toolbar-minus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={minusSize}
-                    >
-                        -
-                    </button>
-                    <div className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1 flex items-center justify-center">
-                        {fontSize}
-                    </div>
-                    <button
-                        className="toolbar-plus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={plusSize}
-                    >
-                        +
-                    </button>
-                    <button
-                        className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={toggleColor}>
-                        Color
-                    </button>
-                    <button className="toolbar-trim bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1">
-                        TRIM
-                    </button>
-                </div>
-                {toggleColorValue && (
-                    <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
-                        <div className="flex flex-wrap ">
-                            <button
-                                className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
+                    <div className="toolbar flex space-x-2 mb-4">
+                        <button
+                            className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                            onClick={toggleBold}
+                        >
+                            <b>B</b>
+                        </button>
+                        <button
+                            className="toolbar-button-idi bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                            onClick={toggleItalic}
+                        >
+                            <i>I</i>
+                        </button>
+                        <button
+                            className="toolbar-minus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                            onClick={minusSize}
+                        >
+                            -
+                        </button>
+                        <div className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1 flex items-center justify-center">
+                            {fontSize}
                         </div>
+                        <button
+                            className="toolbar-plus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                            onClick={plusSize}
+                        >
+                            +
+                        </button>
+                        <button
+                            className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
+                            onClick={toggleColor}>
+                            Color
+                        </button>
+                        <button className="toolbar-trim bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1">
+                            TRIM
+                        </button>
                     </div>
-                )}
-                <button className='toolbar-button bg-red-600 hover:bg-red-500 text-white font-semibold 
-                rounded-lg px-4 py-2 absolute right-10' onClick={saveClick}>
-                    Save As
-                </button>
-                {save && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-                            <h2 className="text-xl font-semibold mb-4">Save As</h2>
-                            <input
-                                type="text"
-                                className="w-full p-2 border-2 border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500"
-                                placeholder="Enter file name" onChange={settingTitle}
-                            />
-                            <div className="flex justify-end space-x-4">
-                                <button className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg px-4 py-2" onClick={cancelSave}>
-                                    Cancel
-                                </button>
-                                <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-4 py-2" onClick={saveSheet}>
-                                    Save
-                                </button>
+                    {toggleColorValue && (
+                        <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
+                            <div className="flex flex-wrap ">
+                                <button
+                                    className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
                             </div>
                         </div>
+                    )}
+                    <div className="toolbar flex space-x-2 mb-4">
+                        <button className="toolbar-button bg-green-500 hover:bg-green-400 text-white font-semibold 
+                rounded-lg px-4 py-2 absolute right-10"
+                            onClick={saveUpdate}>
+                            Update
+                        </button>
                     </div>
-                )}
-            </div>
+                </div>
 
-            {/* Grid */}
-            <div
-                className="grid gap-1"
-                onMouseUp={handleMouseUp}
-                style={{
-                    gridTemplateColumns: `repeat(${data[0].length}, 1fr)`,
-                }}
-            >
-                {data.map((row, rowIndex) =>
-                    row.map((cell, colIndex) => (
-                        <textarea
-                            key={`${rowIndex}-${colIndex}`}
-                            className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelected(rowIndex, colIndex) ? 'bg-blue-100' : 'bg-white'}`}
-                            onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
-                            onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                            onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
-                        >
-                            {cell}
-                        </textarea>
-                    ))
-                )}
+                {/* Grid */}
+                <div
+                    className="grid gap-1"
+                    onMouseUp={handleMouseUp}
+                    style={{
+                        gridTemplateColumns: `repeat(${data[0].length}, 1fr)`,
+                    }}
+                >
+                    {data.map((row, rowIndex) =>
+                        row.map((cell, colIndex) => (
+                            <textarea
+                                key={`${rowIndex}-${colIndex}`}
+                                className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelected(rowIndex, colIndex) ? 'bg-blue-100' : 'bg-white'}`}
+                                value={cell}
+                                onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
+                                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                                onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
+                            />
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );
