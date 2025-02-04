@@ -5,8 +5,8 @@ import '../index.css';
 import axios, { Axios } from 'axios';
 import { Await } from 'react-router-dom';
 
-const numRows = 10;
-const numCols = 10;
+const numRows = 50;
+const numCols = 15;
 
 const Spreadsheet = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -15,16 +15,13 @@ const Spreadsheet = () => {
     const { isBold, isItalic, toggleBold, toggleItalic } = useContext(ToolbarContext);
     const [data, setData] = useState(
         Array.from({ length: numRows }, () =>
-            Array.from({ length: numCols }, () => '')
+            Array.from({ length: numCols }, () => ({ isBold: false, isItalic: false,value: '' }))
         )
     );
 
     const [selectedCells, setSelectedCells] = useState([]);
     const [dragging, setDragging] = useState(false);
     const startCell = useRef(null);
-    const [fontSize, setFontSize] = useState(12);
-    const [fontColor, setFontColor] = useState('black');
-    const [toggleColorValue, setFontColorValue] = useState(false);
     const [formula, setFormula] = useState('');
     const [calculatedResult, setCalculatedResult] = useState(0);
     const [save, toggleSave] = useState(false);
@@ -34,7 +31,9 @@ const Spreadsheet = () => {
         e.preventDefault();
         const value = e.target.value;
         const updatedData = [...data];
-        updatedData[row][col] = value;
+        const bold=document.getElementById(`${row}-${col}`).style.fontWeight;
+        const italic=document.getElementById(`${row}-${col}`).style.fontStyle;
+        updatedData[row][col]={value:value, isBold: bold==='bold'?true:false, isItalic: italic==='italic'?true:false};
         setData(updatedData);
         //console.log(data);
     };
@@ -85,31 +84,7 @@ const Spreadsheet = () => {
         return selectedCells.some((cell) => cell.row === row && cell.col === col);
     };
 
-    const toggleSize = () => {
-        console.log('size', fontSize);
-    }
-
-    const toggleColor = () => {
-        setFontColorValue(!toggleColorValue);
-        console.log('color', fontColor);
-    }
-
-    const changeSize = (e) => {
-
-        console.log('size', fontSize);
-    }
-
-    const plusSize = () => {
-        setFontSize(fontSize + 1);
-    }
-
-    const minusSize = () => {
-        setFontSize(fontSize - 1);
-        if (fontSize <= 1) {
-            setFontSize(1);
-            alert('Minimum font size reached');
-        }
-    }
+    
 
     const saveClick = () => {
         toggleSave(!save);
@@ -136,168 +111,6 @@ const Spreadsheet = () => {
         e.preventDefault();
         setFormula(e.target.value);
     }
-
-
-    const formulaTyped = (e) => {
-        e.preventDefault();
-
-        if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
-            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
-            // Handle SUMROW
-            let row = parseInt(formula.substring(7, formula.length - 1));
-            let sum = 0;
-            let count = 0;
-            for (let i = 0; i < numCols; i++) {
-                let dat = parseFloat(data[row][i]);
-                if (!isNaN(dat)) {
-                    sum += dat;
-                    count++;
-                }
-            }
-            setCalculatedResult(sum);
-        } else if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
-            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
-            // Handle SUMCOL
-            let col = parseInt(formula.substring(7, formula.length - 1));
-            let sum1 = 0;
-            let count = 0;
-            for (let i = 0; i < numRows; i++) {
-                let datt = parseFloat(data[i][col]);
-                if (!isNaN(datt)) {
-                    sum1 += datt;
-                    count++;
-                }
-            }
-            setCalculatedResult(sum1);
-        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
-            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
-            // Handle AVGR
-            let row = parseInt(formula.substring(7, formula.length - 1));
-            let sum = 0;
-            let count = 0;
-            for (let i = 0; i < numCols; i++) {
-                let dat = parseFloat(data[row][i]);
-                if (!isNaN(dat)) {
-                    sum += dat;
-                    count++;
-                }
-            }
-            setCalculatedResult(count > 0 ? sum / count : 0);
-        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
-            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
-            // Handle AVGC
-            let col = parseInt(formula.substring(7, formula.length - 1));
-            let sum = 0;
-            let count = 0;
-            for (let i = 0; i < numRows; i++) {
-                let dat = parseFloat(data[i][col]);
-                if (!isNaN(dat)) {
-                    sum += dat;
-                    count++;
-                }
-            }
-            setCalculatedResult(count > 0 ? sum / count : 0);
-        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
-            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
-            // Handle MAXR
-            let row = parseInt(formula.substring(7, formula.length - 1));
-            let max = -Infinity;
-            for (let i = 0; i < numCols; i++) {
-                let dat = parseFloat(data[row][i]);
-                if (!isNaN(dat) && dat > max) {
-                    max = dat;
-                }
-            }
-            setCalculatedResult(max === -Infinity ? "No valid data" : max);
-        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
-            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
-            // Handle MAXC
-            let col = parseInt(formula.substring(7, formula.length - 1));
-            let max = -Infinity;
-            for (let i = 0; i < numRows; i++) {
-                let dat = parseFloat(data[i][col]);
-                if (!isNaN(dat) && dat > max) {
-                    max = dat;
-                }
-            }
-            setCalculatedResult(max === -Infinity ? "No valid data" : max);
-        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
-            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
-            // Handle MINR
-            let row = parseInt(formula.substring(7, formula.length - 1));
-            let min = Infinity;
-            for (let i = 0; i < numCols; i++) {
-                let dat = parseFloat(data[row][i]);
-                if (!isNaN(dat) && dat < min) {
-                    min = dat;
-                }
-            }
-            setCalculatedResult(min === Infinity ? "No valid data" : min);
-        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
-            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
-            // Handle MINC
-            let col = parseInt(formula.substring(7, formula.length - 1));
-            let min = Infinity;
-            for (let i = 0; i < numRows; i++) {
-                let dat = parseFloat(data[i][col]);
-                if (!isNaN(dat) && dat < min) {
-                    min = dat;
-                }
-            }
-            setCalculatedResult(min === Infinity ? "No valid data" : min);
-        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
-            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
-            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
-            (formula.substring(5, 8) === 'ROW' || formula.substring(5, 8) === 'row')) {
-            // Handle COUNTR
-            let row = parseInt(formula.substring(9, formula.length - 1));
-            let count = 0;
-            for (let i = 0; i < numCols; i++) {
-                let dat = data[row][i];
-                if (dat !== '') {
-                    count++;
-                }
-            }
-            setCalculatedResult(count);
-        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
-            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
-            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
-            (formula.substring(5, 8) === 'COL' || formula.substring(5, 8) === 'col')) {
-            // Handle COUNTC
-            let col = parseInt(formula.substring(9, formula.length - 1));
-            let count = 0;
-            for (let i = 0; i < numRows; i++) {
-                let dat = data[i][col];
-                if (dat !== '') {
-                    count++;
-                }
-            }
-            setCalculatedResult(count);
-        } else {
-            setCalculatedResult('Invalid formula');
-        }
-    };
-
-    let previousColorButton = null;
-
-    const changeFontColor = (e) => {
-        e.preventDefault();
-        const selectedButton = e.target;
-        document.querySelectorAll('.color-button').forEach((button) => {
-            button.classList.remove('border-black');
-        });
-
-        selectedButton.classList.add('border-black');
-        const backgroundColor = window.getComputedStyle(selectedButton).backgroundColor;
-        const color = backgroundColor.replace(/^rgba?\(0, 0, 0, 0\)/, 'transparent').trim();
-
-        previousColorButton = selectedButton;
-
-        document.querySelectorAll('.grid-cell').forEach((cell) => {
-            if (cell.value !== '') return;
-            cell.style.color = color;
-        });
-    };
 
     useEffect(() => {
         if (isBold && isItalic) {
@@ -337,13 +150,6 @@ const Spreadsheet = () => {
         }
     }, [isBold, isItalic]);
 
-    useEffect(() => {
-        document.querySelectorAll('.grid-cell').forEach(cell => {
-            if (cell.value !== '') return;
-            cell.style.fontSize = `${fontSize}px`;
-        }, [fontSize])
-    });
-
     return (
         <div className="spreadsheet-container p-4">
             <h1 className="text-4xl font-bold text-left text-blue-600 mb-6">{userInfo.username}&apos;s sheet</h1>
@@ -358,7 +164,7 @@ const Spreadsheet = () => {
                     />
                     <button
                         className="formula-button font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100"
-                        onClick={formulaTyped}
+                        
                     >
                         Apply
                     </button>
@@ -384,84 +190,9 @@ const Spreadsheet = () => {
                     >
                         <i>I</i>
                     </button>
-                    <button
-                        className="toolbar-minus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={minusSize}
-                    >
-                        -
-                    </button>
-                    <div className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1 flex items-center justify-center">
-                        {fontSize}
-                    </div>
-                    <button
-                        className="toolbar-plus bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={plusSize}
-                    >
-                        +
-                    </button>
-                    <button
-                        className="toolbar-button bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                        onClick={toggleColor}>
-                        Color
-                    </button>
-                    <button className="toolbar-trim bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1">
-                        TRIM
-                    </button>
+                    
                 </div>
-                {toggleColorValue && (
-                    <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
-                        <div className="flex flex-wrap ">
-                            <button
-                                className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                            <button
-                                className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
-                                onClick={changeFontColor}
-                            ></button>
-                        </div>
-                    </div>
-                )}
+                
                 <button className='toolbar-button bg-red-600 hover:bg-red-500 text-white font-semibold 
                 rounded-lg px-4 py-2 absolute right-10' onClick={saveClick}>
                     Save As
@@ -489,28 +220,65 @@ const Spreadsheet = () => {
             </div>
 
             {/* Grid */}
-            <div
-                className="grid gap-1"
-                onMouseUp={handleMouseUp}
-                style={{
-                    gridTemplateColumns: `repeat(${data[0].length}, 1fr)`,
-                }}
-            >
-                {data.map((row, rowIndex) =>
-                    row.map((cell, colIndex) => (
-                        <textarea
-                            key={`${rowIndex}-${colIndex}`}
-                            className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelected(rowIndex, colIndex) ? 'bg-blue-100' : 'bg-white'}`}
-                            onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
-                            onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                            onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
-                        >
-                            {cell}
-                        </textarea>
-                    ))
-                )}
-            </div>
+    <div className="sticky top-0 left-0 bg-white z-10 w-5">
+        <div 
+            className="grid" 
+            style={{
+                gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Adjust for row numbers
+            }}
+        >
+            {/* Empty top-left cell */}
+            <div className="w-12 h-10"></div>
+            {/* Column Headers */}
+            {data[0].map((_, colIndex) => (
+                <div 
+                    key={`col-${colIndex}`} 
+                    className="w-24 h-5 flex items-center justify-center font-bold"
+                >
+                    {colIndex + 1}
+                </div>
+            ))}
         </div>
+    </div>
+
+    {/* Grid Content (With Row Headers) */}
+    <div 
+        className="grid" 
+        style={{
+            gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Ensure row numbers
+            gridAutoRows: 'minmax(10px, auto)',
+        }}
+    >
+        {data.map((row, rowIndex) => (
+            <>
+                {/* Row Number (Fixed on Scroll) */}
+                <div 
+                    key={`row-${rowIndex}`} 
+                    className="sticky left-0 w-9 h-10 mt-3 flex items-center justify-center font-bold"
+                >
+                    {rowIndex + 1}
+                </div>
+
+                {/* Grid Cells */}
+                {row.map((cell, colIndex) => (
+                    <textarea
+                        key={`${rowIndex}-${colIndex}`}
+                        id={`${rowIndex}-${colIndex}`}
+                        className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isSelected(rowIndex, colIndex) ? 'bg-white' : 'bg-white'
+                        }`}
+                        onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
+                        onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                        onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
+                        style={{ fontSize: `${cell.fontSize}px` }}
+                    >
+                        {cell.text}
+                    </textarea>
+                ))}
+            </>
+        ))}
+    </div>
+</div>
     );
 };
 

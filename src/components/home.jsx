@@ -16,16 +16,25 @@ const Home = () => {
                     transition={{ duration: 1 }}
                     className="text-center"
                 >
-                    <h1 className="text-5xl font-bold mb-4">{userInfo.username}</h1>
+                    {userInfo && <h1 className="text-5xl font-bold mb-4">Hello, {userInfo.username}</h1>}
                     <h1 className="text-5xl font-bold mb-4">Welcome to Spreadsheet App</h1>
                     <p className="text-xl mb-8">Create and manage your spreadsheets with ease</p>
                     <Link to="/spreadsheet">
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="bg-white text-blue-500 font-semibold py-2 px-4 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300"
+                            className="bg-white text-blue-500 font-semibold py-2 px-4 rounded-lg mr-6 shadow-lg hover:bg-gray-100 transition duration-300"
                         >
                             Create Spreadsheet
+                        </motion.button>
+                    </Link>
+                    <Link to="/register">
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="bg-white text-blue-500 font-semibold py-2 px-4 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300"
+                        >
+                           Register Now
                         </motion.button>
                     </Link>
                 </motion.div>

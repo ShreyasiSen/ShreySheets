@@ -27,7 +27,6 @@ const Navbar = () => {
                     </Link>
                 </div>
                 
-                {/* Desktop Navigation */}
                 <div className="hidden md:flex space-x-4 items-center ml-auto">
                     <Link to="/" className="hover:text-indigo-300 transition duration-300">Home</Link>
                     <Link to="/Dashboard" className="hover:text-indigo-300 transition duration-300">Profile</Link>

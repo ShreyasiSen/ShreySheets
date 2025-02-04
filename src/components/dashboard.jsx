@@ -40,7 +40,7 @@ function Dashboard() {
                                         <tr key={rowIndex}>
                                             {row.map((cell, colIndex) => (
                                                 <td key={`${rowIndex}-${colIndex}`} className="border px-2 py-1">
-                                                    {cell}
+                                                    {cell.value}
                                                 </td>
                                             ))}
                                         </tr>
