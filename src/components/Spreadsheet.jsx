@@ -9,6 +9,7 @@ const numRows = 50;
 const numCols = 15;
 
 const Spreadsheet = () => {
+    const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const id = userInfo._id;
 
@@ -100,7 +101,7 @@ const Spreadsheet = () => {
 
     const saveSheet = () => {
         try {
-            axios.post(`http://localhost:8000/api/spreadsheet/${id}`, {userid:id, sheetTitle: sheetTitle, data: data });
+            axios.post(`${API_URL}/api/spreadsheet/${id}`, {userid:id, sheetTitle: sheetTitle, data: data });
             toggleSave(false);
         } catch (error) {
             console.log('Error saving sheet');

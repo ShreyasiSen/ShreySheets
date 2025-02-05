@@ -10,6 +10,7 @@ const numRows = 10;
 const numCols = 10;
 
 const Spreadsheet = () => {
+    const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
     const { spreadsheetId } = useParams();
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const id = userInfo._id;
@@ -48,7 +49,7 @@ const Spreadsheet = () => {
         useEffect(() => {
             const fetchSheet = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:8000/api/spreadsheet/${spreadsheetId}`);
+                    const response = await axios.get(`${API_URL}/api/spreadsheet/${spreadsheetId}`);
                     console.log(response.data.data);
                     setData(response.data.data);
                     response.data.data.map((row, rowIndex) => {
@@ -147,7 +148,7 @@ const Spreadsheet = () => {
                 sheetTitle: sheetTitle,
                 userid: id
             }
-            axios.put(`http://localhost:8000/api/spreadsheet/${spreadsheetId}`, dataToSend);
+            axios.put(`${API_URL}/api/spreadsheet/${spreadsheetId}`, dataToSend);
             alert('Sheet updated successfully');
         }
         catch(error){

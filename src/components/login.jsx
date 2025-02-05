@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const Login = () => {
+  const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -13,7 +14,7 @@ const Login = () => {
     const email = e.target.email.value;
     const password = e.target.password.value;
     try {
-      const response = await axios.post('/api/login', {
+      const response = await axios.post(`${API_URL}/api/login`, {
         email,
         password,
       },{

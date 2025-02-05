@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Dashboard() {
+    const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
     const [spreadsheets, setSpreadsheets] = useState([]);
     const navigate = useNavigate();
     const token = localStorage.getItem('userInfo');
@@ -14,7 +15,7 @@ function Dashboard() {
             const fetchSpreadsheets = async () => {
                 try {
                     const userId = JSON.parse(token)._id; // Assuming the token contains user info as a JSON string
-                    const response = await axios.get(`http://localhost:8000/api/spreadsheet/user/getsheet/${userId}`);
+                    const response = await axios.get(`${API_URL}/api/spreadsheet/user/getsheet/${userId}`);
                     setSpreadsheets(response.data);
                 } catch (error) {
                     console.error('Error fetching spreadsheets:', error);

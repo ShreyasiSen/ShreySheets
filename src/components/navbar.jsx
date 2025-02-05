@@ -65,7 +65,6 @@ const Navbar = () => {
                 <div className="md:hidden bg-purple-700 text-white p-4 space-y-4">
                     <Link to="/" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Home</Link>
                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Dashboard</Link>
-                    <Link to="/pricing" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Pricing</Link>
                     {isAuthenticated ? (
                         <button 
                             onClick={(e) => { handleLogout(e); setIsMenuOpen(false); }} 
