@@ -30,7 +30,6 @@ const Navbar = () => {
                 <div className="hidden md:flex space-x-4 items-center ml-auto">
                     <Link to="/" className="hover:text-indigo-300 transition duration-300">Home</Link>
                     <Link to="/Dashboard" className="hover:text-indigo-300 transition duration-300">Profile</Link>
-                    <Link to="/pricing" className="hover:text-indigo-300 transition duration-300">Pricing</Link>
                     {isAuthenticated ? (
                         <button 
                             onClick={handleLogout} 
