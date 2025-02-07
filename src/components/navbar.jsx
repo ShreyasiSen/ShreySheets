@@ -6,40 +6,45 @@ const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const navigate = useNavigate();
     const isAuthenticated = localStorage.getItem('userInfo');
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
             localStorage.removeItem('userInfo');
+            setShowSuccessDialog(true);
+            setTimeout(() => {
+                setShowSuccessDialog(false);
             navigate('/');
+            }, 1500);
         } catch (error) {
             console.error('Error logging out:', error);
         }
     };
 
     return (
-        <nav className="bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 text-white shadow-md p-4">
-            <div className=" flex items-center justify-between">
-                {/* Logo */}
-                <div className="text-xl font-bold ">
-                    <Link to="/" className="text-white hover:text-indigo-300 transition duration-300">
-                        ShreySheets
-                    </Link>
-                </div>
-                
-                <div className="hidden md:flex space-x-4 items-center ml-auto">
-                    <Link to="/" className="hover:text-indigo-300 transition duration-300">Home</Link>
-                    <Link to="/Dashboard" className="hover:text-indigo-300 transition duration-300">Profile</Link>
-                    {isAuthenticated ? (
-                        <button 
-                            onClick={handleLogout} 
-                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
-                            Logout
-                        </button>
-                    ) : (
-                        <Link to="/login" className="hover:text-indigo-300 transition duration-300">Login</Link>
-                    )}
-                </div>
+        <nav className="fixed top-0 left-0 bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 text-white shadow-md p-4 w-full z-50">
+    <div className="flex items-center justify-between">
+        {/* Logo */}
+        <div className="text-xl font-bold">
+            <Link to="/" className="text-white hover:text-indigo-300 transition duration-300">
+                ShreySheets
+            </Link>
+        </div>
+        
+        <div className="hidden md:flex space-x-4 items-center ml-auto">
+            <Link to="/" className="hover:text-indigo-300 transition duration-300">Home</Link>
+            <Link to="/Dashboard" className="hover:text-indigo-300 transition duration-300">Profile</Link>
+            {isAuthenticated ? (
+                <button 
+                    onClick={handleLogout} 
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
+                    Logout
+                </button>
+            ) : (
+                <Link to="/login" className="hover:text-indigo-300 transition duration-300">Login</Link>
+            )}
+        </div>
                 
                 {/* Mobile Hamburger Icon */}
                 <div className="md:hidden flex items-center">
@@ -73,6 +78,13 @@ const Navbar = () => {
                     ) : (
                         <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Login</Link>
                     )}
+                </div>
+            )}
+            {showSuccessDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white animate-bounce p-8 rounded-lg shadow-lg w-full max-w-sm mx-4 sm:mx-auto">
+                        <h2 className="text-xl font-semibold mb-4 text-center text-green-500">Logout Successful!</h2>
+                    </div>
                 </div>
             )}
         </nav>

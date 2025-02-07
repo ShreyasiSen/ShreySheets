@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './navbar';
 
 const Register = () => {
     const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
@@ -29,6 +30,8 @@ const Register = () => {
     };
 
     return (
+        <div>
+            <Navbar />
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Register</h2>
@@ -86,6 +89,8 @@ const Register = () => {
                 </form>
                 {message && <p className="mt-4 text-center text-red-500">{message}</p>}
             </div>
+        </div>
+        
         </div>
     );
 };

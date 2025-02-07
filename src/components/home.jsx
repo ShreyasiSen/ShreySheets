@@ -2,9 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from './navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+    const navigate = useNavigate();
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+    const handleCreateSpreadsheet = () => {
+        if (userInfo) {
+            navigate('/spreadsheet');
+        } else {
+            alert('Please login to create a spreadsheet');
+            navigate('/login');
+        }
+    };
+
     return (
         <div>
             <Navbar />
@@ -19,15 +31,14 @@ const Home = () => {
                     {userInfo && <h1 className="text-5xl font-bold mb-4">Hello, {userInfo.username}</h1>}
                     <h1 className="text-5xl font-bold mb-4">Welcome to Spreadsheet App</h1>
                     <p className="text-xl mb-8">Create and manage your spreadsheets with ease</p>
-                    <Link to="/spreadsheet">
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             className="bg-white text-blue-500 font-semibold py-2 px-4 rounded-lg mr-6 shadow-lg hover:bg-gray-100 transition duration-300"
+                            onClick={handleCreateSpreadsheet}
                         >
                             Create Spreadsheet
                         </motion.button>
-                    </Link>
                     <Link to="/register">
                         <motion.button
                             whileHover={{ scale: 1.1 }}

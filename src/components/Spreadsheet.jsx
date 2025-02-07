@@ -4,19 +4,23 @@ import { useContext } from 'react';
 import '../index.css';
 import axios, { Axios } from 'axios';
 import { Await } from 'react-router-dom';
+import Navbar from './navbar';
+import Home from './home';
+import { useNavigate } from 'react-router-dom';
 
 const numRows = 50;
 const numCols = 15;
 
 const Spreadsheet = () => {
-    const API_URL= import.meta.env.PROD? 'https://shreysheets-backend.onrender.com': 'http://localhost:8000';
+    const API_URL = import.meta.env.PROD ? 'https://shreysheets-backend.onrender.com' : 'http://localhost:8000';
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const id = userInfo._id;
+
+    const id = userInfo;
 
     const { isBold, isItalic, toggleBold, toggleItalic } = useContext(ToolbarContext);
     const [data, setData] = useState(
         Array.from({ length: numRows }, () =>
-            Array.from({ length: numCols }, () => ({ isBold: false, isItalic: false,value: '' }))
+            Array.from({ length: numCols }, () => ({ isBold: false, isItalic: false, value: '' }))
         )
     );
 
@@ -27,14 +31,15 @@ const Spreadsheet = () => {
     const [calculatedResult, setCalculatedResult] = useState(0);
     const [save, toggleSave] = useState(false);
     const [sheetTitle, setSheetTitle] = useState('');
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     const handleInputChange = (row, col, e) => {
         e.preventDefault();
         const value = e.target.value;
         const updatedData = [...data];
-        const bold=document.getElementById(`${row}-${col}`).style.fontWeight;
-        const italic=document.getElementById(`${row}-${col}`).style.fontStyle;
-        updatedData[row][col]={value:value, isBold: bold==='bold'?true:false, isItalic: italic==='italic'?true:false};
+        const bold = document.getElementById(`${row}-${col}`).style.fontWeight;
+        const italic = document.getElementById(`${row}-${col}`).style.fontStyle;
+        updatedData[row][col] = { value: value, isBold: bold === 'bold' ? true : false, isItalic: italic === 'italic' ? true : false };
         setData(updatedData);
         //console.log(data);
     };
@@ -85,7 +90,7 @@ const Spreadsheet = () => {
         return selectedCells.some((cell) => cell.row === row && cell.col === col);
     };
 
-    
+
 
     const saveClick = () => {
         toggleSave(!save);
@@ -101,8 +106,12 @@ const Spreadsheet = () => {
 
     const saveSheet = () => {
         try {
-            axios.post(`${API_URL}/api/spreadsheet/${id}`, {userid:id, sheetTitle: sheetTitle, data: data });
+            axios.post(`${API_URL}/api/spreadsheet/${id}`, { userid: id, sheetTitle: sheetTitle, data: data });
             toggleSave(false);
+            setShowSuccessDialog(true);
+      setTimeout(() => {
+        setShowSuccessDialog(false);
+        }, 1000);
         } catch (error) {
             console.log('Error saving sheet');
         }
@@ -150,13 +159,15 @@ const Spreadsheet = () => {
             });
         }
     }, [isBold, isItalic]);
-
+    
     return (
-        <div className="spreadsheet-container p-4">
-            <h1 className="text-4xl font-bold text-left text-blue-600 mb-6">{userInfo.username}&apos;s sheet</h1>
+        <div>
+            <Navbar />
+        <div className="spreadsheet-container mt-20">
+            <h1 className="text-4xl font-bold text-left ml-6 text-blue-600 mb-6">{userInfo.username}&apos;s page</h1>
             {/*add a formula bar here*/}
-            <div className='flex '>
-                <div className="formula-bar flex items-center justify-between p-2 mb-5 w-1/2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+            <div className='flex ml-4 '>
+                <div className="formula-bar flex items-center justify-between p-2 mb-5 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
                     <input
                         type="text"
                         className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
@@ -165,20 +176,20 @@ const Spreadsheet = () => {
                     />
                     <button
                         className="formula-button font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100"
-                        
+
                     >
                         Apply
                     </button>
                 </div>
 
-                <div className="result-bar font-semibold flex ml-96 items-center p-5 mb-5 w-56 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
-                    <span>RESULT : {calculatedResult}</span>
+                <div className="result-bar font-semibold flex items-center p-1 mb-5 ml-6 w-60 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                    <span>Result: {calculatedResult}</span>
                 </div>
             </div>
 
             {/* Toolbar */}
             <div className="toolbar flex space-x-2 mb-4">
-                <div className="toolbar flex space-x-2 mb-4">
+                <div className="toolbar flex ml-6 space-x-2 mb-4">
                     <button
                         className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
                         onClick={toggleBold}
@@ -191,21 +202,22 @@ const Spreadsheet = () => {
                     >
                         <i>I</i>
                     </button>
-                    
+
                 </div>
-                
+
                 <button className='toolbar-button bg-red-600 hover:bg-red-500 text-white font-semibold 
                 rounded-lg px-4 py-2 absolute right-10' onClick={saveClick}>
                     Save As
                 </button>
                 {save && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-                            <h2 className="text-xl font-semibold mb-4">Save As</h2>
+                    <div className="fixed inset-0 bg-black/50 flex items-start justify-start z-50 pt-52">
+                        <div className="bg-slate-100 p-8 rounded-xl shadow-slate-500 shadow-xl w-full max-w-sm mx-4 sm:mx-auto">
+                            <div className="text-xl font-semibold mb-4">Save As</div>
                             <input
                                 type="text"
                                 className="w-full p-2 border-2 border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500"
-                                placeholder="Enter file name" onChange={settingTitle}
+                                placeholder="Enter file name"
+                                onChange={settingTitle}
                             />
                             <div className="flex justify-end space-x-4">
                                 <button className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg px-4 py-2" onClick={cancelSave}>
@@ -221,65 +233,72 @@ const Spreadsheet = () => {
             </div>
 
             {/* Grid */}
-    <div className="sticky top-0 left-0 bg-white z-10 w-5">
-        <div 
-            className="grid" 
-            style={{
-                gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Adjust for row numbers
-            }}
-        >
-            {/* Empty top-left cell */}
-            <div className="w-12 h-10"></div>
-            {/* Column Headers */}
-            {data[0].map((_, colIndex) => (
-                <div 
-                    key={`col-${colIndex}`} 
-                    className="w-24 h-5 flex items-center justify-center font-bold"
+            <div className="top-0 left-0 bg-white z-10 w-5">
+                <div
+                    className="grid"
+                    style={{
+                        gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Adjust for row numbers
+                    }}
                 >
-                    {colIndex + 1}
+                    {/* Empty top-left cell */}
+                    <div className="w-12 h-10"></div>
+                    {/* Column Headers */}
+                    {data[0].map((_, colIndex) => (
+                        <div
+                            key={`col-${colIndex}`}
+                            className="w-24 h-5 flex items-center justify-center font-bold"
+                        >
+                            {colIndex + 1}
+                        </div>
+                    ))}
                 </div>
-            ))}
-        </div>
-    </div>
+            </div>
 
-    {/* Grid Content (With Row Headers) */}
-    <div 
-        className="grid" 
-        style={{
-            gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Ensure row numbers
-            gridAutoRows: 'minmax(10px, auto)',
-        }}
-    >
-        {data.map((row, rowIndex) => (
-            <>
-                {/* Row Number (Fixed on Scroll) */}
-                <div 
-                    key={`row-${rowIndex}`} 
-                    className="sticky left-0 w-9 h-10 mt-3 flex items-center justify-center font-bold"
-                >
-                    {rowIndex + 1}
-                </div>
+            {/* Grid Content (With Row Headers) */}
+            <div
+                className="grid"
+                style={{
+                    gridTemplateColumns: `50px repeat(${data[0].length}, 100px)`, // Ensure row numbers
+                    gridAutoRows: 'minmax(10px, auto)',
+                }}
+            >
+                {data.map((row, rowIndex) => (
+                    <>
+                        {/* Row Number (Fixed on Scroll) */}
+                        <div
+                            key={`row-${rowIndex}`}
+                            className="sticky left-0 w-9 h-10 mt-3 flex items-center justify-center font-bold"
+                        >
+                            {rowIndex + 1}
+                        </div>
 
-                {/* Grid Cells */}
-                {row.map((cell, colIndex) => (
-                    <textarea
-                        key={`${rowIndex}-${colIndex}`}
-                        id={`${rowIndex}-${colIndex}`}
-                        className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isSelected(rowIndex, colIndex) ? 'bg-white' : 'bg-white'
-                        }`}
-                        onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
-                        onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                        onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
-                        style={{ fontSize: `${cell.fontSize}px` }}
-                    >
-                        {cell.text}
-                    </textarea>
+                        {/* Grid Cells */}
+                        {row.map((cell, colIndex) => (
+                            <textarea
+                                key={`${rowIndex}-${colIndex}`}
+                                id={`${rowIndex}-${colIndex}`}
+                                className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelected(rowIndex, colIndex) ? 'bg-white' : 'bg-white'
+                                    }`}
+                                onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
+                                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                                onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
+                                style={{ fontSize: `${cell.fontSize}px` }}
+                            >
+                                {cell.text}
+                            </textarea>
+                        ))}
+                    </>
                 ))}
-            </>
-        ))}
-    </div>
-</div>
+            </div>
+        </div>
+        {showSuccessDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 animate-ping rounded-lg shadow-lg w-full max-w-sm mx-4 sm:mx-auto">
+            <h2 className="text-xl font-semibold mb-4 text-center text-green-500">Page saved successfully!</h2>
+          </div>
+        </div>
+      )}
+        </div>
     );
 };
 
