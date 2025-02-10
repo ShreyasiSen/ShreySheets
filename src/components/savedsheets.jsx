@@ -24,13 +24,15 @@ const Spreadsheet = () => {
     );
 
     const [selectedCells, setSelectedCells] = useState([]);
-    const [dragging, setDragging] = useState(false);
     const startCell = useRef(null);
     const [fontSize, setFontSize] = useState(12);
     const [fontColor, setFontColor] = useState('black');
     const [toggleColorValue, setFontColorValue] = useState(false);
-    const [formula, setFormula] = useState('');
-    const [calculatedResult, setCalculatedResult] = useState(0);
+    const [calculatedResult, setCalculatedResult] = useState('');
+    const [prompt, setPrompt] = useState('');
+    const [geminiResponse, setGeminiResponse] = useState('');
+    const [finalResult, setFinalResult] = useState('');
+    const [loading, setLoading] = useState(false);
     const [save, toggleSave] = useState(false);
     const [sheetTitle, setSheetTitle] = useState('');
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -72,64 +74,13 @@ const Spreadsheet = () => {
         fetchSheet();
     }, [navigate, spreadsheetId]);
 
-    const handleMouseDown = (row, col) => {
-        startCell.current = { row, col };
-        setDragging(true);
-        setSelectedCells([{ row, col }]);
-    };
-
-    const handleMouseOver = (row, col) => {
-        if (dragging) {
-            const newSelection = [];
-            const startRow = Math.min(startCell.current.row, row);
-            const endRow = Math.max(startCell.current.row, row);
-            const startCol = Math.min(startCell.current.col, col);
-            const endCol = Math.max(startCell.current.col, col);
-
-            for (let r = startRow; r <= endRow; r++) {
-                for (let c = startCol; c <= endCol; c++) {
-                    newSelection.push({ row: r, col: c });
-                }
-            }
-            setSelectedCells(newSelection);
-        }
-    };
-
-    const handleMouseUp = () => {
-        setDragging(false);
-
-        // Copy content from start cell to all selected cells
-        if (selectedCells.length > 1) {
-            const { row: startRow, col: startCol } = startCell.current;
-            const contentToCopy = data[startRow][startCol];
-
-            const updatedData = [...data];
-            selectedCells.forEach(({ row, col }) => {
-                updatedData[row][col] = contentToCopy;
-            });
-            setData(updatedData);
-        }
-
-        setSelectedCells([]);
-        startCell.current = null;
-    };
-
     const isSelected = (row, col) => {
         return selectedCells.some((cell) => cell.row === row && cell.col === col);
     };
 
-    const toggleSize = () => {
-        console.log('size', fontSize);
-    }
-
     const toggleColor = () => {
         setFontColorValue(!toggleColorValue);
         console.log('color', fontColor);
-    }
-
-    const changeSize = (e) => {
-
-        console.log('size', fontSize);
     }
 
     const plusSize = () => {
@@ -143,6 +94,13 @@ const Spreadsheet = () => {
             alert('Minimum font size reached');
         }
     }
+    useEffect(() => {
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            if (cell.value !== '') return;
+            cell.style.fontSize = `${fontSize}px`;
+        }, [fontSize])
+    });
+
 
     const saveClick = () => {
         try {
@@ -161,6 +119,169 @@ const Spreadsheet = () => {
             console.log(error);
         }
     }
+    const handlePromptChange = (e) => {
+        setPrompt(e.target.value);
+    };
+
+    const handleGeminiRequest = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await axios.post(`${API_URL}/api/gemini`, { description: prompt });
+            const generatedFormula = response.data.response;
+
+            setGeminiResponse(generatedFormula);
+
+            // Compute the result based on the generated formula
+            formulaTyped(generatedFormula);
+        } catch (error) {
+            console.error('Error processing request:', error);
+            setGeminiResponse('Error processing request');
+            setFinalResult('');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Function to process formulas
+    const formulaTyped = (formula) => {
+        if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle SUMROW
+            let row = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i].value);
+                if (!isNaN(dat)) {
+                    sum += dat;
+                    count++;
+                }
+            }
+            setCalculatedResult(sum);
+        } else if ((formula.substring(0, 3) === 'SUM' || formula.substring(0, 3) === 'sum') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle SUMCOL
+            let col = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let sum1 = 0;
+            let count = 0;
+            for (let i = 1; i <= numRows; i++) {
+                let datt = parseFloat(data[i][col].value);
+                if (!isNaN(datt)) {
+                    sum1 += datt;
+                    count++;
+                }
+            }
+            setCalculatedResult(sum1);
+        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle AVGR
+            let row = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i].value);
+                if (!isNaN(dat)) {
+                    sum += dat;
+                    count++;
+                }
+            }
+            setCalculatedResult(count > 0 ? sum / count : 0);
+        } else if ((formula.substring(0, 3) === 'AVG' || formula.substring(0, 3) === 'avg') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle AVGC
+            let col = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col].value);
+                if (!isNaN(dat)) {
+                    sum += dat;
+                    count++;
+                }
+            }
+            setCalculatedResult(count > 0 ? sum / count : 0);
+        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle MAXR
+            let row = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let max = -Infinity;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i].value);
+                if (!isNaN(dat) && dat > max) {
+                    max = dat;
+                }
+            }
+            setCalculatedResult(max === -Infinity ? "No valid data" : max);
+        } else if ((formula.substring(0, 3) === 'MAX' || formula.substring(0, 3) === 'max') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle MAXC
+            let col = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let max = -Infinity;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col].value);
+                if (!isNaN(dat) && dat > max) {
+                    max = dat;
+                }
+            }
+            setCalculatedResult(max === -Infinity ? "No valid data" : max);
+        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
+            (formula.substring(3, 6) === 'ROW' || formula.substring(3, 6) === 'row')) {
+            // Handle MINR
+            let row = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let min = Infinity;
+            for (let i = 0; i < numCols; i++) {
+                let dat = parseFloat(data[row][i].value);
+                if (!isNaN(dat) && dat < min) {
+                    min = dat;
+                }
+            }
+            setCalculatedResult(min === Infinity ? "No valid data" : min);
+        } else if ((formula.substring(0, 3) === 'MIN' || formula.substring(0, 3) === 'min') &&
+            (formula.substring(3, 6) === 'COL' || formula.substring(3, 6) === 'col')) {
+            // Handle MINC
+            let col = parseInt(formula.substring(7, formula.length - 1)) - 1;
+            let min = Infinity;
+            for (let i = 0; i < numRows; i++) {
+                let dat = parseFloat(data[i][col].value);
+                if (!isNaN(dat) && dat < min) {
+                    min = dat;
+                }
+            }
+            setCalculatedResult(min === Infinity ? "No valid data" : min);
+        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
+            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
+            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
+            (formula.substring(5, 8) === 'ROW' || formula.substring(5, 8) === 'row')) {
+            // Handle COUNTR
+            let row = parseInt(formula.substring(9, formula.length - 1)) - 1;
+            let count = 0;
+            for (let i = 0; i < numCols; i++) {
+                let dat = data[row][i].value;
+                if (dat !== '') {
+                    count++;
+                }
+            }
+            setCalculatedResult(count);
+        } else if ((formula.substring(0, 3) === 'COU' || formula.substring(0, 3) === 'cou') &&
+            (formula.substring(3, 4) === 'N' || formula.substring(3, 4) === 'n') &&
+            (formula.substring(4, 5) === 'T' || formula.substring(4, 5) === 't') &&
+            (formula.substring(5, 8) === 'COL' || formula.substring(5, 8) === 'col')) {
+            // Handle COUNTC
+            let col = parseInt(formula.substring(9, formula.length - 1)) - 1;
+            let count = 0;
+            for (let i = 0; i < numRows; i++) {
+                let dat = data[i][col].value;
+                if (dat !== '') {
+                    count++;
+                }
+            }
+            setCalculatedResult(count);
+        } else {
+            setCalculatedResult('NA');
+        }
+    };
 
     const cancelSave = () => {
         toggleSave(false);
@@ -170,12 +291,26 @@ const Spreadsheet = () => {
         setSheetTitle(e.target.value);
     }
 
-    const formulaTyping = (e) => {
-        e.preventDefault();
-        setFormula(e.target.value);
-    }
-
     let previousColorButton = null;
+
+    const changeFontColor = (e) => {
+        e.preventDefault();
+        const selectedButton = e.target;
+        document.querySelectorAll('.color-button').forEach((button) => {
+            button.classList.remove('border-black');
+        });
+
+        selectedButton.classList.add('border-black');
+        const backgroundColor = window.getComputedStyle(selectedButton).backgroundColor;
+        const color = backgroundColor.replace(/^rgba?\(0, 0, 0, 0\)/, 'transparent').trim();
+
+        previousColorButton = selectedButton;
+
+        document.querySelectorAll('.grid-cell').forEach((cell) => {
+            if (cell.value !== '') return;
+            cell.style.color = color;
+        });
+    };
 
     useEffect(() => {
         if (isBold && isItalic) {
@@ -219,31 +354,39 @@ const Spreadsheet = () => {
         <div>
             <Navbar />
             <div className="spreadsheet-container mt-20">
-                <h1 className="text-4xl font-bold text-left ml-6 text-blue-600 mb-6">{sheetTitle}</h1>
+                <h1 className="text-4xl font-bold text-left ml-6 text-blue-600 mb-4">{sheetTitle}</h1>
                 {/*add a formula bar here*/}
                 <div className='flex ml-4 '>
-                    <div className="formula-bar flex items-center justify-between p-2 mb-5 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                    <div className="prompt-bar flex items-center justify-between p-2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
                         <input
                             type="text"
                             className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
-                            placeholder="Enter formula..."
-                            onChange={formulaTyping}
+                            placeholder="Enter your prompt..."
+                            value={prompt}
+                            onChange={handlePromptChange}
                         />
                         <button
-                            className="formula-button font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100"
-
+                            className="font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleGeminiRequest}
+                            disabled={loading}
                         >
-                            Apply
+                            {loading ? 'Processing...' : 'Apply'}
                         </button>
                     </div>
 
-                    <div className="result-bar font-semibold flex items-center p-1 mb-5 ml-6 w-60 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                    {/* Gemini Response */}
+                    <div className="response-bar mr-4 ml-4 font-semibold flex items-center p-2 h-12 rounded-lg bg-gradient-to-r from-green-400 to-blue-500 border-2 border-green-700 text-white">
+                        <span>Formula: {geminiResponse}</span>
+                    </div>
+
+                    {/* Computed Result */}
+                    <div className="result-bar font-semibold flex items-center p-2 h-12 rounded-lg bg-gradient-to-r from-red-400 to-yellow-500 border-2 border-red-700 text-white">
                         <span>Result: {calculatedResult}</span>
                     </div>
                 </div>
 
                 {/* Toolbar */}
-                <div className="toolbar flex space-x-2 mb-4">
+                <div className="toolbar flex mt-4 space-x-2 mb-4">
                     <div className="toolbar flex ml-6 space-x-2 mb-4">
                         <button
                             className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
@@ -257,7 +400,65 @@ const Spreadsheet = () => {
                         >
                             <i>I</i>
                         </button>
-
+                        <button className="toolbar-minus bg-gray-200 p-2 rounded" onClick={minusSize}>-</button>
+                        <div className="toolbar-button bg-gray-200 p-2 rounded flex items-center justify-center">{fontSize}</div>
+                        <button className="toolbar-plus bg-gray-200 p-2 rounded" onClick={plusSize}>+</button>
+                        {/* <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleSize}>Font Size</button> */}
+                        <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleColor}>Color</button>
+                        {toggleColorValue && (
+                            <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
+                                <div className="flex flex-wrap ">
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                    <button
+                                        className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
+                                        onClick={changeFontColor}
+                                    ></button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <button className='toolbar-button bg-red-600 hover:bg-red-500 text-white font-semibold 
                 rounded-lg px-4 py-2 absolute right-10' onClick={saveClick}>
@@ -313,9 +514,6 @@ const Spreadsheet = () => {
                                     className={`grid-cell p-2 border border-green-800 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelected(rowIndex, colIndex) ? 'bg-white' : 'bg-white'
                                         }`}
                                     onInput={(e) => handleInputChange(rowIndex, colIndex, e)}
-                                    onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                                    onMouseOver={() => handleMouseOver(rowIndex, colIndex)}
-                                    style={{ fontSize: `${cell.fontSize}px` }}
                                 >
                                     {cell.text}
                                 </textarea>
