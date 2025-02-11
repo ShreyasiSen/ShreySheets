@@ -15,7 +15,7 @@ const Navbar = () => {
             setShowSuccessDialog(true);
             setTimeout(() => {
                 setShowSuccessDialog(false);
-            navigate('/');
+                navigate('/');
             }, 1500);
         } catch (error) {
             console.error('Error logging out:', error);
@@ -23,33 +23,34 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="fixed top-0 left-0 bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 text-white shadow-md p-4 w-full z-50">
-    <div className="flex items-center justify-between">
-        {/* Logo */}
-        <div className="text-xl font-bold">
-            <Link to="/" className="text-white hover:text-indigo-300 transition duration-300">
-                ShreySheets
-            </Link>
-        </div>
-        
-        <div className="hidden md:flex space-x-4 items-center ml-auto">
-            <Link to="/" className="hover:text-indigo-300 transition duration-300">Home</Link>
-            <Link to="/Dashboard" className="hover:text-indigo-300 transition duration-300">Profile</Link>
-            {isAuthenticated ? (
-                <button 
-                    onClick={handleLogout} 
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
-                    Logout
-                </button>
-            ) : (
-                <Link to="/login" className="hover:text-indigo-300 transition duration-300">Login</Link>
-            )}
-        </div>
-                
+        <nav className="fixed top-0 left-0 bg-gradient-to-r from-purple-800 via-purple-600 to-purple-500 text-white shadow-md p-4 w-full z-50">
+            <div className="flex items-center justify-between">
+                {/* Logo */}
+                <div className="text-xl font-bold">
+                    <Link to="/" className="text-white hover:text-indigo-300 transition duration-300">
+                        ShreySheets
+                    </Link>
+                </div>
+
+                <div className="hidden md:flex space-x-4 items-center ml-auto">
+                    <Link to="/" className="text-white hover:text-indigo-700 font-medium transition-all duration-500 hover:scale-105">Home</Link>
+                    <Link to="/Dashboard" className="text-white hover:text-indigo-700 font-medium transition-all duration-500 hover:scale-105">Profile</Link>
+                    {isAuthenticated ? (
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md border border-red-400 
+                               hover:bg-red-600 transition-all duration-300 transform hover:scale-105">
+                            Logout
+                        </button>
+                    ) : (
+                        <Link to="/login" className="hover:text-indigo-300 transition duration-300">Login</Link>
+                    )}
+                </div>
+
                 {/* Mobile Hamburger Icon */}
                 <div className="md:hidden flex items-center">
-                    <button 
-                        onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="text-white focus:outline-none">
                         {!isMenuOpen ? (
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -70,8 +71,8 @@ const Navbar = () => {
                     <Link to="/" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Home</Link>
                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block hover:text-indigo-300 transition duration-300">Dashboard</Link>
                     {isAuthenticated ? (
-                        <button 
-                            onClick={(e) => { handleLogout(e); setIsMenuOpen(false); }} 
+                        <button
+                            onClick={(e) => { handleLogout(e); setIsMenuOpen(false); }}
                             className="block w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
                             Logout
                         </button>
