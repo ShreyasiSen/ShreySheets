@@ -3,6 +3,7 @@ import { ToolbarContext } from '../contexts/ToolbarContext';
 import { useContext } from 'react';
 import '../index.css';
 import axios, { Axios } from 'axios';
+import { ChevronDown } from "lucide-react";
 import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import { use } from 'react';
 import Navbar from './navbar';
@@ -36,6 +37,9 @@ const Spreadsheet = () => {
     const [save, toggleSave] = useState(false);
     const [sheetTitle, setSheetTitle] = useState('');
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+        const [showFontSizeOptions, setShowFontSizeOptions] = useState(false);
+        const dropdownRef = useRef(null);
 
     const handleInputChange = (row, col, e) => {
         e.preventDefault();
@@ -76,6 +80,10 @@ const Spreadsheet = () => {
 
     const isSelected = (row, col) => {
         return selectedCells.some((cell) => cell.row === row && cell.col === col);
+    };
+
+    const handleFormulaClick = () => {
+        setIsOpen(!isOpen);
     };
 
     const toggleColor = () => {
@@ -356,107 +364,158 @@ const Spreadsheet = () => {
             <div className="spreadsheet-container mt-20">
                 <h1 className="text-4xl font-bold text-left ml-6 text-blue-600 mb-4">{sheetTitle}</h1>
                 {/*add a formula bar here*/}
-                <div className='flex ml-4 '>
-                    <div className="prompt-bar flex items-center justify-between p-2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
-                        <input
-                            type="text"
-                            className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
-                            placeholder="Enter your prompt..."
-                            value={prompt}
-                            onChange={handlePromptChange}
-                        />
+                <div className="flex items-center ml-6 mt-4 mb-6 space-x-2">
+                    {/* Formula Button */}
+                    <div className="relative inline-block" ref={dropdownRef}>
+                        {/* Formula Button with Dropdown Icon */}
                         <button
-                            className="font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={handleGeminiRequest}
-                            disabled={loading}
+                            className="flex items-center justify-between font-semibold text-lg w-32 h-9 bg-gray-200 text-black rounded-sm px-3 border border-gray-400 shadow-md hover:bg-gray-300 transition-all duration-300"
+                            onClick={handleFormulaClick}
                         >
-                            {loading ? 'Processing...' : 'Apply'}
+                            Formula
+                            <ChevronDown className="w-5 h-5 ml-2 transition-transform duration-300"
+                                style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                            />
                         </button>
-                    </div>
 
-                    {/* Gemini Response */}
-                    <div className="response-bar mr-4 ml-4 font-semibold flex items-center p-2 h-12 rounded-lg bg-gradient-to-r from-green-400 to-blue-500 border-2 border-green-700 text-white">
-                        <span>Formula: {geminiResponse}</span>
-                    </div>
-
-                    {/* Computed Result */}
-                    <div className="result-bar font-semibold flex items-center p-2 h-12 rounded-lg bg-gradient-to-r from-red-400 to-yellow-500 border-2 border-red-700 text-white">
-                        <span>Result: {calculatedResult}</span>
-                    </div>
-                </div>
-
-                {/* Toolbar */}
-                <div className="toolbar flex mt-4 space-x-2 mb-4">
-                    <div className="toolbar flex ml-6 space-x-2 mb-4">
-                        <button
-                            className="toolbar-button-bld bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                            onClick={toggleBold}
-                        >
-                            <b>B</b>
-                        </button>
-                        <button
-                            className="toolbar-button-idi bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg px-2 py-1"
-                            onClick={toggleItalic}
-                        >
-                            <i>I</i>
-                        </button>
-                        <button className="toolbar-minus bg-gray-200 p-2 rounded" onClick={minusSize}>-</button>
-                        <div className="toolbar-button bg-gray-200 p-2 rounded flex items-center justify-center">{fontSize}</div>
-                        <button className="toolbar-plus bg-gray-200 p-2 rounded" onClick={plusSize}>+</button>
-                        {/* <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleSize}>Font Size</button> */}
-                        <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleColor}>Color</button>
-                        {toggleColorValue && (
-                            <div className="absolute mt-12 p-2 bg-white border border-gray-400 rounded shadow-sm">
-                                <div className="flex flex-wrap ">
+                        {/* Components appear side by side when isOpen is true */}
+                        {isOpen && (
+                            <div className="absolute flex mt-2 ml-4">
+                                {/* Prompt Bar */}
+                                <div className="prompt-bar flex items-center justify-between p-2 h-12 rounded-lg bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-blue-700 text-white">
+                                    <input
+                                        type="text"
+                                        className="flex-grow mr-2 bg-transparent font-semibold border-none outline-none text-white placeholder-white"
+                                        placeholder="Enter your prompt..."
+                                        value={prompt}
+                                        onChange={handlePromptChange}
+                                    />
                                     <button
-                                        className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
-                                    <button
-                                        className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
-                                        onClick={changeFontColor}
-                                    ></button>
+                                        className="font-bold text-l mr-2 w-18 h-8 bg-white text-black rounded-lg px-4 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={handleGeminiRequest}
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Processing...' : 'Apply'}
+                                    </button>
                                 </div>
+
+                                <div className="response-bar flex items-center ml-4 p-2 h-12 font-semibold rounded-lg bg-gradient-to-r from-green-400 to-blue-500 border-2 border-green-700 text-white whitespace-nowrap">
+                                    <span className="truncate">Formula: {geminiResponse}</span>
+                                </div>
+
+                                {/* Computed Result */}
+                                <div className="result-bar flex items-center ml-4 p-2 h-12 font-semibold rounded-lg bg-gradient-to-r from-red-400 to-yellow-500 border-2 border-red-700 text-white whitespace-nowrap">
+                                    <span className="truncate">Result: {calculatedResult}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        className="toolbar-button-bld font-semibold text-lg w-10 h-9 bg-gray-200 text-black rounded-sm hover:bg-gray-300 px-2 py-1"
+                        onClick={toggleBold}
+                    >
+                        <b>B</b>
+                    </button>
+                    <button
+                        className="toolbar-button-idi font-bold text-lg w-10 h-9 bg-gray-200 text-black rounded-sm hover:bg-gray-300 px-2 py-1"
+                        onClick={toggleItalic}
+                    >
+                        <i>I</i>
+                    </button>
+
+                    <div className="relative inline-block" ref={dropdownRef}>
+                        {/* Font Size Button with Dropdown Icon */}
+                        <button
+                            className="flex items-center justify-between font-semibold text-lg w-32 h-9 bg-gray-200 text-black rounded-sm px-3 border border-gray-400 shadow-md hover:bg-gray-300 transition-all duration-300"
+                            onClick={() => setShowFontSizeOptions(!showFontSizeOptions)}
+                        >
+                            Font Size
+                            <ChevronDown className={`w-5 h-5 ml-2 transition-transform duration-300 ${showFontSizeOptions ? "rotate-180" : "rotate-0"}`} />
+                        </button>
+
+                        {showFontSizeOptions && (
+                            <div className="absolute ml-4 mt-2 w-24 flex bg-white border-2 border-purple-700 rounded shadow-lg">
+                                <button
+                                    className="block  w-8 text-centre p-2 hover:bg-blue-400"
+                                    onClick={() => { minusSize(); setShowFontSizeOptions(true); }}
+                                >
+                                    -
+                                </button>
+                                <div className="block border-e-2 border-s-2 border-blue-400 p-2">
+                                    {fontSize}
+                                </div>
+                                <button
+                                    className="block w-8 text-center p-2 hover:bg-blue-400"
+                                    onClick={() => { plusSize(); setShowFontSizeOptions(true); }}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
+                    {/* <button className="toolbar-button bg-gray-200 p-2 rounded" onClick={toggleSize}>Font Size</button> */}
+                    <div className="relative inline-block" ref={dropdownRef}>
+                        {/* Color Button with Dropdown Icon */}
+                        <button
+                            className="flex items-center justify-between font-semibold text-lg w-24 h-9 bg-gray-200 text-black rounded-sm px-3 border border-gray-400 shadow-md hover:bg-gray-300 transition-all duration-300"
+                            onClick={() => toggleColor(!toggleColorValue)}
+                        >
+                            Color
+                            <ChevronDown className={`w-5 h-5 ml-2 transition-transform duration-300 ${toggleColorValue ? "rotate-180" : "rotate-0"}`} />
+                        </button>
+                        {toggleColorValue && (
+                            <div className="absolute flex mt-2 p-2 bg-white border border-gray-400 rounded shadow-sm">
+
+                                <button
+                                    className="w-6 h-6 rounded-full bg-red-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600 "
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-orange-500 mr-1 mb-1 border-2 border-transparent  hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-yellow-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-green-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-teal-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-blue-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-indigo-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-purple-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-pink-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-gray-500 mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-black mr-1 mb-1 border-2 border-transparent hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
+                                <button
+                                    className="w-6 h-6 rounded-full bg-white mr-1 mb-1 border-2 border-gray-300  hover:border-gray-600"
+                                    onClick={changeFontColor}
+                                ></button>
                             </div>
                         )}
                     </div>

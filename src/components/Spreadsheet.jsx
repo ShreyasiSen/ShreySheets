@@ -433,7 +433,7 @@ const Spreadsheet = () => {
                     <div className="relative inline-block" ref={dropdownRef}>
                         {/* Color Button with Dropdown Icon */}
                         <button
-                            className="flex items-center justify-between font-semibold text-lg w-24 h-9 bg-gray-200 text-black rounded-md px-3 border border-gray-400 shadow-md hover:bg-gray-300 transition-all duration-300"
+                            className="flex items-center justify-between font-semibold text-lg w-24 h-9 bg-gray-200 text-black rounded-sm px-3 border border-gray-400 shadow-md hover:bg-gray-300 transition-all duration-300"
                             onClick={() => toggleColor(!toggleColorValue)}
                         >
                             Color
