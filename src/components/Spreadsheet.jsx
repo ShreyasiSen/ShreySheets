@@ -40,7 +40,7 @@ const Spreadsheet = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showFontSizeOptions, setShowFontSizeOptions] = useState(false);
     const dropdownRef = useRef(null);
-
+    
     const handleInputChange = (row, col, e) => {
         e.preventDefault();
         const value = e.target.value;
@@ -336,7 +336,7 @@ const Spreadsheet = () => {
             <Navbar />
             {/* Toolbar */}
             <div className="spreadsheet-container mt-20">
-                <h1 className="text-4xl font-bold text-left ml-6 text-blue-600">{userInfo.username}&apos;s page</h1>
+            <h1 className="text-4xl font-bold text-left ml-6 text-blue-600">{sheetTitle || "Untitled"}</h1>
                 {/*add a formula bar here*/}
                 <div className="flex items-center ml-6 mt-4 mb-6 space-x-2">
                     {/* Formula Button */}
