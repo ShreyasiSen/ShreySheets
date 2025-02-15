@@ -49,8 +49,8 @@ const Home = () => {
                     transition={{ duration: 1 }}
                     className="text-center"
                 >
-                    {userInfo && <h1 className="text-4xl font-serif mt-20 pr-6 font-bold mb-2">Hello, {userInfo.username}</h1>}
-                    <h1 className="text-5xl mt-10 font-serif font-bold mb-4">Welcome to Spreadsheet App</h1>
+                    {userInfo && <h1 className="text-4xl font-serif pt-10 mt-32 pr-6 font-bold mb-2">Hello, {userInfo.username}</h1>}
+                    <h1 className="text-5xl pt-10 mt-10 font-serif font-bold mb-4">Welcome to Spreadsheet App</h1>
                     <p className="text-xl mb-8">Create and manage your spreadsheets with ease</p>
                     <motion.button
                         whileHover={{ scale: 1.1 }}
